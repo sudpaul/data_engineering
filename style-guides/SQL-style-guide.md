@@ -41,4 +41,26 @@ While code is a language and if proficient in the language, a reader can underst
 **Bad Commenting — No In-line Comments**
 
 **Better Commenting — In-line Comments** 
-An in-line comment that tells us a bit more about why this code is doing on details. 
+An in-line comment that tells us a bit more about why this code is doing on details.
+The ultimate objective is to do block level commenting which help reuseability why and 
+what business logic the code are trying to solve, run this code and things to look out for.
+ 
+ ## Common Table Expressions
+
+ Common table expressions or CTEs are a way of creating an in-memory table get query results. This table can then be used throughout the rest of the SQL script. The benefit to using a CTE is that anyone can reduce code duplication, make the code more readable, and increase it's ability to perform QA checks on desire results.
+
+## Aliasing
+
+Bad Practice — No Alias Used on Fields
+
+Aliasing is very important to help readers understand where elements reside and what tables are being used. When aliases aren’t used or poor naming conventions are used, complexity is increased, and the reading/comprehension of code is reduced.
+**Best Practice — Alias Used on Fields**
+
+## GROUP BY
+
+Group By — Numbers vs Explicit Fields
+Bad Practice — Group by position number
+
+Best Practice — Group by field name
+A group-by with explicit field names will not only increase code readability but also help in debugging.
+
