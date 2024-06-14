@@ -5,6 +5,17 @@ This is the SQL coding  best practices for formatting SQL that I’ve learned an
 When many programming languages, anyone can pretty much write statements as long as code fit the business requirments and the code will execute. Obviously there are some exceptions to this (such as indentations in Python) but that’s for another day. However, Data team
 members working in database code development should follow the guideline for readability and reusability of their code.
 
+## Naming Conventions
+
+ ### Database Objects
+
+- **Tables** : Use singular nouns (e.g., Student, Class).
+- **Views** : Prefix with vw_ (e.g., vw_loads).
+- **Stored Procedures**: Prefix with sp_ (e.g., sp_generate_report).
+- **Functions**: Prefix with fn_ (e.g., fn_calculate_discount).
+- **Indexes**: Prefix with idx_ (e.g., idx_student_name).
+- **Schemas**: Use meaningful names (e.g., sales, hr).
+
 ## Formatting
 
 When it comes to formatting, there are a number of things that should be considered such as intentions, alignment, comma positions, and text case.
@@ -27,6 +38,29 @@ For example of code that has been written and is quite unreadable if one or more
 -	multiple hard to detect bugs
 
 The better version of formatting is aligned to the left. All commas, spaces, and indentations make the code very easy to read.
+
+## Query Optimization
+ ### Indexes
+Use indexes to improve query performance on large tables.
+Avoid over-indexing as it can degrade performance on inserts and updates.
+
+Avoid Select *
+Explicitly specify columns to improve readability and performance
+
+```sql
+
+SELECT
+    Student_id,
+    First_name,
+    Last_name
+FROM
+    Student.Student_Profile;
+```
+Limit Data Retrieval
+
+Use WHERE clauses to limit the number of rows returned.
+
+Use LIMIT or equivalent to restrict the result set size.
 
 ## Case Conditions
 
