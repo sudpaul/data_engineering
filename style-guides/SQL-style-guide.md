@@ -56,7 +56,7 @@ SELECT
 FROM
     Student.Student_Profile;
 ```
-Limit Data Retrieval
+### Limit Data Retrieval
 
 Use WHERE clauses to limit the number of rows returned.
 
