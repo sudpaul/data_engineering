@@ -9,7 +9,7 @@ variables:
   service_connection: 'service-connection-devops-4-dbx'                           # name of the devops service connection
   key_vault_name: "devops-for-dbx-state-kv"                         # name of the key vault to use
   tf_state_backend_resource_group_name: 'devopsfordatabricks-terraform-state'      # name of the resource group for the terraform state file
-  tf_state_backend_resource_group_location: 'UK South'              # location of the resource group for the terraform state file
+  tf_state_backend_resource_group_location: 'Australia East'              # location of the resource group for the terraform state file
   tf_state_backend_storage_account_name: 'devops4dbxterraformstate'    # name of the storage account for the terraform state file
   tf_state_backend_container_name: 'terraformstate'            # name of the container for the terraform state file
   tf_state_backend_key_name: 'terraform.tfstate' # name of the key for the terraform state file: <app_name>.<evn>.terraform.tfstate
