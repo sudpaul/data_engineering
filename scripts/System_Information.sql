@@ -47,32 +47,37 @@ INNER JOIN sys.parameters AS p ON o.object_id = p.object_id
 WHERE o.object_id = OBJECT_ID('<schema_name.object_name>')
 ORDER BY schema_name, object_name, p.parameter_id;
 
-/* Reture the objects count in the Datawarehouse */
-select
-  db_name() as DBName,
-  s.name as SchemaName,
-  o.type_desc,
-  count(1) as ObjectCount,
-  db_name() + '_' + s.name as row_key
-from
-  sys.objects o
-  inner join sys.schemas s ON o.schema_id = s.schema_id
-group by
-  s.name,
-  o.type_desc
+/* Reture the objects count in the Datawarehouse 
+-- Select database name, schema name, object type description, object count, and row key from sys.objects */
+SELECT 
+    db_name() AS DBName,                     -- Database name
+    s.name AS SchemaName,                    -- Schema name
+    o.type_desc,                             -- Object type description
+    COUNT(1) AS ObjectCount,                 -- Count of objects
+    db_name() + '_' + s.name AS row_key      -- Row key (concatenation of database name and schema name)
+FROM 
+    sys.objects o
+    INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
+GROUP BY 
+    s.name, 
+    o.type_desc
+
 UNION ALL
-select
-  db_name() as DBName,
-  s.name as SchemaName,
-  'STAT' as type_desc,
-  count(1) as ObjectCount,
-  db_name() + '_' + s.name as row_key
-from
-  sys.objects o
-  inner join sys.schemas s ON o.schema_id = s.schema_id
-  inner join sys.stats ss ON o.object_id = ss.object_id
-group by
-  s.name
-ORDER BY
-  db_name(),
-  s.name;
+
+-- Select database name, schema name, 'STAT' as type description, object count, and row key from sys.stats
+SELECT 
+    db_name() AS DBName,                     -- Database name
+    s.name AS SchemaName,                    -- Schema name
+    'STAT' AS type_desc,                     -- 'STAT' type description for statistics
+    COUNT(1) AS ObjectCount,                 -- Count of statistics
+    db_name() + '_' + s.name AS row_key      -- Row key (concatenation of database name and schema name)
+FROM 
+    sys.objects o
+    INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
+    INNER JOIN sys.stats ss ON o.object_id = ss.object_id
+GROUP BY 
+    s.name
+
+ORDER BY 
+    db_name(),                               -- Order by database name
+    s.name;                                  -- Order by schema name
