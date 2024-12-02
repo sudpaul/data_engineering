@@ -1,8 +1,9 @@
-﻿# SYNOPSIS
-# Retrieves a list of objects (files) that have been modified between two Git branches.
-
-$1
+﻿
 function Get-ObjectsBetweenBranches {
+    # SYNOPSIS
+
+    # Retrieves a list of objects (files) that have been modified between two Git branches.
+
     param (
         [Parameter(Mandatory = $false, HelpMessage = "Local workspace path for Git operations")]
         [string]$LocalWorkspacePath = 'C:\Temp\VSTS',
@@ -87,9 +88,7 @@ function Get-ObjectsBetweenBranches {
     return $Objects
 }
 
-# SYNOPSIS
-# Retrieves a list of objects (files) that have been modified between two Git branches.
 
 # USAGE EXAMPLE
-# This is an example of how anyone would type the command in PowerShell to run the script:
+
 # Get-ObjectsBetweenBranches -BaseBranch "main" -TargetBranch "feature/new-feature" -UseNewWorkspace $true -ForceClone $false
