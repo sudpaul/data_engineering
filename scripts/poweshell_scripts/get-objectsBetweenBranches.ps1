@@ -26,7 +26,7 @@ function Get-ObjectsBetweenBranches {
         [bool]$ForceClone = $false,
 
         [Parameter(Mandatory = $false, HelpMessage = "Repository URL for cloning")]
-        [string]$RepositoryURL = "https://example.visualstudio.com/DefaultCollection/Project/_git/Repository"
+        [string]$RepositoryURL = "default azure devops url"
     )
 
     # Log the start of the function
