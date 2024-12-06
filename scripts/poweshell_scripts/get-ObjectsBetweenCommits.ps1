@@ -35,7 +35,7 @@
 function Get-ObjectsBetweenCommits {
     [CmdletBinding()]
     param (
-        [string]$localWorkspacePath = '****',
+        [string]$localWorkspacePath = '****', #"C:\temp:\repo_name"
         [string]$branchName = '****',
         [string]$baseCommit,
         [string]$targetCommit = "****",
@@ -75,7 +75,7 @@ function Get-ObjectsBetweenCommits {
     }
 
     # Save the list of changes to a file
-    $outputFile = "C:\Temp\commit_list.txt"
+    $outputFile = "C:\temp\commit_list.txt"
     $diffObjects | Set-Content -Path $outputFile
     Write-Verbose "List of changed objects saved to $outputFile"
 
