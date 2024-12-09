@@ -1,135 +1,128 @@
 ﻿function loader {
+    <#
+    .SYNOPSIS
+    Loads necessary PowerShell modules for branch and commit comparisons.
+
+    .DESCRIPTION
+    Imports the required modules `get-objectsBetweenBranches` and `get-objectsBetweenCommits` 
+    to support operations in the deployment script.
+
+    .EXAMPLE
+    loader
+    # Loads the required modules to work with the deployment script.
+    #>
     Import-Module -Name ".\get-objectsBetweenBranches.ps1"
     Import-Module -Name ".\get-objectsBetweenCommits.ps1"
 }
 
 loader
-function create-deploymentScript 
-( $targetbranch ="*****",
-  $schema = "",
-  $objectType = "",
-  $baseCommit = "",
-  $targetCommit = "",
-  $targetSolution = "",
-  $useBranchDiff = $false,
-  $sourceBranch = ""
 
-) {
-    if($useBranchDiff -and $targetBranch -eq ""){
-        Write-Error "Please provide Target branch in case of Branch comparsion"
-        exit        
+function create-deploymentScript {
+    <#
+    .SYNOPSIS
+    Generates deployment scripts based on differences in database objects between branches or commits.
+
+    .DESCRIPTION
+    This function creates deployment scripts by comparing SQL objects between specified branches 
+    or commits. The generated scripts are categorized into tables, views, and stored procedures.
+
+    .PARAMETER targetBranch
+    The target branch for comparison. Required for branch-based comparisons.
+
+    .PARAMETER schema
+    Filter objects by schema. Use "ALL" to include all schemas.
+
+    .PARAMETER objectType
+    Filter objects by type (e.g., table, view, procedure). Use "ALL" to include all object types.
+
+    .PARAMETER baseCommit
+    The base commit hash for commit comparison.
+
+    .PARAMETER targetCommit
+    The target commit hash for commit comparison.
+
+    .PARAMETER targetSolution
+    The name of the solution being deployed.
+
+    .PARAMETER useBranchDiff
+    Set to $true for branch comparison; otherwise, commit comparison is used.
+
+    .PARAMETER sourceBranch
+    The source branch for branch comparison.
+
+    .EXAMPLE
+    create-deploymentScript -sourceBranch "release/1.2" -targetBranch "release/1.3" -useBranchDiff $true -schema "ALL" -objectType "ALL"
+    # Generates deployment scripts for all objects between the two branches.
+
+    .EXAMPLE
+    create-deploymentScript -targetBranch "main" -baseCommit "abc123" -targetCommit "def456" -targetSolution "MySolution" -schema "dbo" -objectType "table"
+    # Generates deployment scripts for all tables in the dbo schema between two commits.
+
+    .NOTES
+    Ensure that the required modules (`get-objectsBetweenBranches.ps1` and `get-objectsBetweenCommits.ps1`) 
+    are loaded using the `loader` function.
+    #>
+
+    param (
+        [string]$targetBranch = "*****",
+        [string]$schema = "",
+        [string]$objectType = "",
+        [string]$baseCommit = "",
+        [string]$targetCommit = "",
+        [string]$targetSolution = "",
+        [bool]$useBranchDiff = $false,
+        [string]$sourceBranch = ""
+    )
+
+    # Validate parameters for branch comparison
+    if ($useBranchDiff -and $targetBranch -eq "") {
+        Write-Error "Please provide a target branch for branch comparison."
+        exit
     }
 
-    if ($useBranchDiff) {
-        $objects = get-objectsBetweenBranches -baseBranch $sourceBranch -targetBranch $targetBranch -TargetSolution $targetSolution  | Where-Object {$_ -Like '*.sql'}
-    }
-    else {
-        $objects = get-objectsBetweenCommits -branchname $targetbranch -baseCommit $baseCommit -targetCommit $targetCommit -TargetSolution $targetSolution |  Where-Object {$_ -Like '*.sql'}
-    }
-    
-    if($schema.ToUpper() -eq "ALL" -AND $objectType.ToUpper() -ne "ALL"){
-    
-        $objectsToScript = $objects | Where-Object {$_ -like "*" + $objectType + "*"}
-    }
-    elseif($schema.ToUpper() -ne "ALL" -AND $objectType.ToUpper() -eq "ALL"){
-        
-        $objectsToScript = $objects | Where-Object {$_ -like "*" + $schema + "*"}
-    }
-    elseif($schema.ToUpper() -eq "ALL" -AND $objectType.ToUpper() -eq "ALL"){
-        $objectsToScript = $objects
-    }
-    else {
-        $objectsToScript = $objects | Where-Object {$_ -like "*" + $schema + "*" -and $_ -like "*" + $objectType + "*"}
-    }
-    
-    
-    $date = Get-Date -Format "yyyymmddHHmm"
-    $outpuTableFile = "c:\temp\Output_" + $targetSolution + "_" + $targetbranch.replace("/","-") + "_" + $date + "_table.sql"
-    $outpuViewFile = "c:\temp\Output_" + $targetSolution + "_" + $targetbranch.replace("/","-") + "_" + $date + "_view.sql"
-    $outpuSPFile = "c:\temp\Output_" + $targetSolution + "_" + $targetbranch.replace("/","-") + "_" + $date + "_storedprocedure.sql"
-
-
-    if(test-path -Path $outpuTableFile) {
-        Remove-Item $outpuTableFile
+    # Retrieve objects based on the comparison type
+    $objects = if ($useBranchDiff) {
+        get-objectsBetweenBranches -baseBranch $sourceBranch -targetBranch $targetBranch -TargetSolution $targetSolution | Where-Object { $_ -like '*.sql' }
+    } else {
+        get-objectsBetweenCommits -branchname $targetBranch -baseCommit $baseCommit -targetCommit $targetCommit -TargetSolution $targetSolution | Where-Object { $_ -like '*.sql' }
     }
 
-    if(test-path -Path $outpuViewFile) {
-        Remove-Item $outpuViewFile
+    # Apply filtering based on schema and object type
+    $objectsToScript = switch ($schema.ToUpper()) {
+        "ALL" { if ($objectType.ToUpper() -eq "ALL") { $objects } else { $objects | Where-Object { $_ -like "*$objectType*" } } }
+        default { if ($objectType.ToUpper() -eq "ALL") { $objects | Where-Object { $_ -like "*$schema*" } } else { $objects | Where-Object { $_ -like "*$schema*" -and $_ -like "*$objectType*" } } }
     }
 
-    if(test-path -Path $outpuSPFile) {
-        Remove-Item $outpuSPFile
+    # Generate output file names
+    $date = Get-Date -Format "yyyyMMddHHmm"
+    $outputFiles = @{
+        Table = "c:\temp\Output_${targetSolution}_${targetBranch.Replace('/', '-')}_${date}_table.sql"
+        View  = "c:\temp\Output_${targetSolution}_${targetBranch.Replace('/', '-')}_${date}_view.sql"
+        SP    = "c:\temp\Output_${targetSolution}_${targetBranch.Replace('/', '-')}_${date}_storedprocedure.sql"
     }
-    
-    $linenumber = 0
-    
-    foreach($script in $objectsToScript) {
-        $isAlter = $false
-        #(Get-Content $script).replace("Alter","Create") | Set-Content $script
-        #(Get-Content $script).replace(";","`r`nGo") | Set-Content $script
-        $linenumber = Select-String -path $script -Pattern "(?<=CREATE)[ ](.+)[ ](?=\[\w+\]\.)" -list | Select-Object -ExpandProperty Linenumber
-        
-        # Created statement not found, search for alter
-        if(($linenumber -eq 0) -or ($linenumber -eq $null)){
-            $linenumber = Select-String -path $script -Pattern "(?<=ALTER)[ ](.+)[ ](?=\[\w+\]\.)" -list | Select-Object -ExpandProperty Linenumber
-            $isAlter = $true
+
+    # Remove existing output files
+    foreach ($file in $outputFiles.Values) {
+        if (Test-Path -Path $file) {
+            Remove-Item $file
         }
-
-        $objectName = Select-String -path $script -Pattern "\[\w+\]\.\[\w+\]" | where {$_.LineNumber -eq $linenumber} |  foreach {$_.Matches.Groups[0].Value}
-        $objectType = Select-String -path $script -Pattern "(?<=CREATE)[ ](.+)[ ](?=\[\w+\]\.)" | where {$_.LineNumber -eq $linenumber} | foreach {$_.Matches.Groups[0].Value}
-        $dropStatement = "`r`nIF OBJECT_ID('$objectName') IS NOT NULL"
-        $dropStatement += "`r`nDrop " + $objectType + " " + $objectName
-        $dropStatement += "`r`n Go `r`n"
-
-        write-host "Scripting Object $objectName from script $script" -ForegroundColor DarkGreen
-
-        if($script -like "*table*"){
-
-            if(!$isAlter){
-                Add-Content $outpuTableFile $dropStatement 
-            } 
-            
-            $tableSql = Get-Content -Path $script | Select-Object -Skip ($linenumber - 1) 
-            
-            Add-Content $outpuTableFile $tableSql 
-
-            Add-Content $outpuTableFile "`r`n Go" 
-            
-        }
-
-        if($script -like "*view*"){
-
-            if(!$isAlter){
-                Add-Content $outpuViewFile $dropStatement            
-            }
-            
-            $viewSql = Get-Content -Path $script | Select-Object -Skip ($linenumber - 1) 
-            
-            Add-Content $outpuViewFile $viewSql
-
-            Add-Content $outpuViewFile "`r`n Go"
-            
-        }
-
-        if($script -like "*procedure*"){
-
-            if(!$isAlter){
-                Add-Content $outpuSPFile $dropStatement
-            }
-
-            $storedProcedureSql = Get-Content -Path $script | Select-Object -Skip ($linenumber - 1) 
-            
-            Add-Content $outpuSPFile $storedProcedureSql
-
-            Add-Content $outpuSPFile "`r`n Go"
-        }
-               
-                
-        #$objectName = Select-String -path $file.FullName -Pattern "\[$schemaName\].*\]" -List | foreach {$_.Matches.Groups[0].Value}
-        #$existString = "`r`nIF OBJECT_ID('$objectName') IS NOT NULL"
-        #$dropContent = Get-Content $file.FullName
     }
-     
+
+    # Process objects and generate scripts
+    foreach ($script in $objectsToScript) {
+        $linenumber = Select-String -Path $script -Pattern "(?<=CREATE|ALTER)[ ](.+)[ ](?=\[\w+\]\.)" -List | Select-Object -ExpandProperty LineNumber
+        if (-not $linenumber) { continue }
+
+        $objectName = Select-String -Path $script -Pattern "\[\w+\]\.\[\w+\]" | Where { $_.LineNumber -eq $linenumber } | ForEach-Object { $_.Matches.Groups[0].Value }
+        $objectType = Select-String -Path $script -Pattern "(?<=CREATE|ALTER)[ ](.+)[ ](?=\[\w+\]\.)" | Where { $_.LineNumber -eq $linenumber } | ForEach-Object { $_.Matches.Groups[0].Value }
+        $dropStatement = "`r`nIF OBJECT_ID('$objectName') IS NOT NULL`r`nDROP $objectType $objectName`r`nGO`r`n"
+
+        Write-Host "Scripting object $objectName from script $script" -ForegroundColor DarkGreen
+
+        switch ($script) {
+            "*table*" { Add-Content $outputFiles.Table $dropStatement; Add-Content $outputFiles.Table (Get-Content $script | Select-Object -Skip ($linenumber - 1)); Add-Content $outputFiles.Table "`r`nGO" }
+            "*view*"  { Add-Content $outputFiles.View $dropStatement; Add-Content $outputFiles.View (Get-Content $script | Select-Object -Skip ($linenumber - 1)); Add-Content $outputFiles.View "`r`nGO" }
+            "*procedure*" { Add-Content $outputFiles.SP $dropStatement; Add-Content $outputFiles.SP (Get-Content $script | Select-Object -Skip ($linenumber - 1)); Add-Content $outputFiles.SP "`r`nGO" }
+        }
+    }
 }
-
-#create-deploymentScript -sourceBranch "release/Release1.2" -targetBranch "release/Release1.3" -useBranchDiff $true -objectType "All" -schema "All"
