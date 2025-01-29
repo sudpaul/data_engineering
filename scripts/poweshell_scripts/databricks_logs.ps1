@@ -1,14 +1,14 @@
 # Requires the AzTable module.
 ############################
 # Databricks configuration
-$DATABRICKS_HOST = "https://northeurope.azuredatabricks.net"
-$DATABRICKS_TOKEN = "dapi00000000000000000000000000000000"
+$DATABRICKS_HOST = "https://adb-4319258785955309.9.azuredatabricks.net"
+$DATABRICKS_TOKEN = "dapi************************"
 $latencyMs = 10 * 60 * 1000
 ############################
 
 ############################
 # Storage table configuration
-$storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mystorageaccount;AccountKey=aaaaaaaaaaaa/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==;EndpointSuffix=core.windows.net"
+$storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=mystorageaccount;AccountKey=******************==;EndpointSuffix=core.windows.net"
 $watermarkTableName = "watermark"
 $idrepTableName = "idempotentRepository"
 ############################
@@ -16,7 +16,7 @@ $idrepTableName = "idempotentRepository"
 ############################
 # Log Analytics configuration
 $customerId = "00000000-0000-0000-0000-000000000000"
-$sharedKey = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=="
+$sharedKey = "*********/______________=="
 $logType = "ClusterEvent"
 $timeStampField = "timestamp"
 ############################
